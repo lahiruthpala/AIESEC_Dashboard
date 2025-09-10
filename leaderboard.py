@@ -58,17 +58,38 @@ total_df = load_data(TOTAL_URL)
 st.title("National B2B Hunt Dashboard")
 
 # --- Total Marks Table ---
+# --- Total Marks Table ---
 if not total_df.empty:
     st.subheader("Total Marks by Entity")
     total_df = total_df.iloc[:-1]
-    
+
     # Ensure unique entities in Total sheet
     total_df = total_df.set_index("Entity")
     total_df = total_df.groupby(total_df.index).sum(numeric_only=True)
     total_df = total_df.reset_index()
 
-    # Show table from TOTAL_URL
-    st.dataframe(total_df.sort_values(by='Total Marks', ascending=False), use_container_width=True)
+    # --- Highlight Top 3 with Pandas Styler ---
+    total_df_styled = total_df.sort_values(by='Total Marks', ascending=False).reset_index(drop=True)
+
+    # Add a 'Rank' column with emojis
+    total_df_styled.insert(0, 'Rank', '')
+    total_df_styled.loc[0, 'Rank'] = '🥇 1'
+    total_df_styled.loc[1, 'Rank'] = '🥈 2'
+    total_df_styled.loc[2, 'Rank'] = '🥉 3'
+
+    def highlight_top_3(row):
+        """Applies a color gradient to the top 3 rows."""
+        if row.name == 0:
+            return [''] * len(row) # Gold
+        elif row.name == 1:
+            return [''] * len(row) # Silver
+        elif row.name == 2:
+            return [''] * len(row) # Bronze
+        return [''] * len(row)
+
+    styled_df = total_df_styled.style.apply(highlight_top_3, axis=1)
+
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
     st.markdown("---")
 
 # --- Function-specific Graphs ---
